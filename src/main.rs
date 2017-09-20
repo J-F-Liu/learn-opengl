@@ -51,11 +51,12 @@ fn main() {
         out vec3 mid_color;
         out vec2 mid_tex_coords;
         uniform float t;
+        uniform mat4 matrix;
 
         void main() {
             vec2 pos = position;
             pos.x += t;
-            gl_Position = vec4(pos, 0.0, 1.0);
+            gl_Position = matrix * vec4(pos, 0.0, 1.0);
             mid_color = color;
             //mid_color = vec3(pos, 0.5);
             mid_tex_coords = tex_coords;
@@ -88,6 +89,12 @@ fn main() {
         let uniforms = uniform! {
           t: t,
           tex: texture,
+          matrix: [
+              [ t.cos(), t.sin(), 0.0, 0.0],
+              [-t.sin(), t.cos(), 0.0, 0.0],
+              [0.0, 0.0, 1.0, 0.0],
+              [0.0, 0.0, 0.0, 1.0f32],
+          ]
         };
 
         let mut frame = display.draw();
