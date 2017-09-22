@@ -5,3 +5,4 @@ authors = ["Junfeng <china.liujunfeng@gmail.com>"]
 
 [dependencies]
 glium = "*"
+image = "*"
