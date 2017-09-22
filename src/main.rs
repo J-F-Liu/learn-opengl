@@ -1,5 +1,5 @@
 #[macro_use] extern crate glium;
-use glium::glutin::{Event, WindowEvent, ControlFlow};
+use glium::glutin::{Event, WindowEvent};
 use glium::Surface;
 
 #[derive(Copy, Clone)]
@@ -28,16 +28,22 @@ fn main() {
     let vertex_buffer = glium::VertexBuffer::new(&display, &shape).unwrap();
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
 
+    let mut t: f32 = -0.5;
+
     let vertex_shader_src = r#"
         #version 140
 
         in vec2 position;
         in vec3 color;
         out vec3 mid_color;
+        uniform float t;
 
         void main() {
-            gl_Position = vec4(position, 0.0, 1.0);
+            vec2 pos = position;
+            pos.x += t;
+            gl_Position = vec4(pos, 0.0, 1.0);
             mid_color = color;
+            //mid_color = vec3(pos, 0.5);
         }
     "#;
 
@@ -53,19 +59,27 @@ fn main() {
 
     let program = glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None).unwrap();
 
-    events_loop.run_forever(|event| {
+    let mut closed = false;
+    while !closed {
+        t += 0.0005;
+        if t > 0.5 {
+            t = -0.5;
+        }
 
         let mut frame = display.draw();
         frame.clear_color(0.2, 0.3, 0.3, 0.3);
-        frame.draw(&vertex_buffer, &indices, &program, &glium::uniforms::EmptyUniforms,
+        frame.draw(&vertex_buffer, &indices, &program, &uniform! { t: t },
             &Default::default()).unwrap();
         frame.finish().unwrap();
 
-        match event {
-            Event::WindowEvent { event: WindowEvent::Closed, .. } => {
-                ControlFlow::Break
-            },
-            _ => ControlFlow::Continue,
-        }
-    });
+        events_loop.poll_events(|event| {
+            match event {
+                Event::WindowEvent { event, .. } => match event {
+                    WindowEvent::Closed => closed = true,
+                    _ => ()
+                },
+                _ => (),
+            }
+        });
+    }
 }
