@@ -79,7 +79,7 @@ fn main() {
         .with_dimensions(1024, 768)
         .with_title("Teapot")
         .with_visibility(true);
-    let context = glium::glutin::ContextBuilder::new();
+    let context = glium::glutin::ContextBuilder::new().with_depth_buffer(24);
     let mut events_loop = glium::glutin::EventsLoop::new();
     let display = glium::Display::new(window, context, &events_loop).unwrap();
     let teapot = load_object(&Path::new("res/teapot.obj"));
@@ -117,6 +117,15 @@ fn main() {
         }
     "#;
 
+    let params = glium::DrawParameters {
+        depth: glium::Depth {
+            test: glium::draw_parameters::DepthTest::IfLess,
+            write: true,
+            .. Default::default()
+        },
+        .. Default::default()
+    };
+
     let program = glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None).unwrap();
 
     let mut closed = false;
@@ -132,8 +141,8 @@ fn main() {
         };
 
         let mut target = display.draw();
-        target.clear_color(0.0, 0.0, 0.0, 0.0);
-        target.draw(&vertex_buffer, &index_buffer, &program, &uniforms, &Default::default()).unwrap();
+        target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
+        target.draw(&vertex_buffer, &index_buffer, &program, &uniforms, &params).unwrap();
         target.finish().unwrap();
 
         // sleeping for some time in order not to use up too much CPU
